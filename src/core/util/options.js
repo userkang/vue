@@ -131,6 +131,10 @@ strats.data = function (
 
 /**
  * Hooks and props are merged as arrays.
+ * 1、child options上不存在该属性，parent options上存在,则返回parent上的属性。
+ * 2、child和parent都存在该属性，则返回concat之后的属性
+ * 3、child上存在该属性，parent不存在，且child上的该属性是Array，则直接返回child上的该属性
+ * 4、child上存在该属性，parent不存在，且child上的该属性不是Array，则把该属性先转换成Array,再返回。
  */
 function mergeHook (
   parentVal: ?Array<Function>,
@@ -213,6 +217,9 @@ strats.watch = function (
 
 /**
  * Other object hashes.
+ * 1、如果parent options上没有该属性，则直接返回child options上的该属性。
+ * 2、如果parent options和child options都有，则合并parent options和child options并生成一个新的对象。
+ * (如果parent和child上有同名属性，合并后的以child options上的为准)
  */
 strats.props =
 strats.methods =
@@ -236,6 +243,7 @@ strats.provide = mergeDataOrFn
 
 /**
  * Default strategy.
+ * 如果 child 该属性存在就取child上的属性值，否则取parent上的
  */
 const defaultStrat = function (parentVal: any, childVal: any): any {
   return childVal === undefined
@@ -245,6 +253,7 @@ const defaultStrat = function (parentVal: any, childVal: any): any {
 
 /**
  * Validate component names
+ * 验证组件名称是否合法
  */
 function checkComponents (options: Object) {
   for (const key in options.components) {
@@ -367,17 +376,23 @@ export function mergeOptions (
   child: Object,
   vm?: Component
 ): Object {
+
+  // 非生产坏境检查组件名是否合法
   if (process.env.NODE_ENV !== 'production') {
     checkComponents(child)
   }
 
+  // TODO 什么情况下会是一个function呢
   if (typeof child === 'function') {
     child = child.options
   }
 
+  // 格式化成对象格式
   normalizeProps(child, vm)
   normalizeInject(child, vm)
   normalizeDirectives(child)
+
+  // 如果传入 options 中
   const extendsFrom = child.extends
   if (extendsFrom) {
     parent = mergeOptions(parent, extendsFrom, vm)
@@ -387,6 +402,7 @@ export function mergeOptions (
       parent = mergeOptions(parent, child.mixins[i], vm)
     }
   }
+
   const options = {}
   let key
   for (key in parent) {

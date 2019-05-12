@@ -109,6 +109,8 @@ export function createComponent (
     return
   }
 
+  // 这里的 baseCtor 其实就是 Vue
+  // 查看 src/core/global-api/index.js
   const baseCtor = context.$options._base
 
   // plain options object: turn it into a constructor
@@ -186,6 +188,7 @@ export function createComponent (
   installComponentHooks(data)
 
   // return a placeholder vnode
+  // 和普通节点不同，组件的vnode没有children
   const name = Ctor.options.name || tag
   const vnode = new VNode(
     `vue-component-${Ctor.cid}${name ? `-${name}` : ''}`,

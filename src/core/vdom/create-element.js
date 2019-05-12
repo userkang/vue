@@ -96,6 +96,7 @@ export function _createElement (
   if (typeof tag === 'string') {
     let Ctor
     ns = (context.$vnode && context.$vnode.ns) || config.getTagNamespace(tag)
+    // 如果是保留标签，就返回一个普通 VNode 节点
     if (config.isReservedTag(tag)) {
       // platform built-in elements
       vnode = new VNode(

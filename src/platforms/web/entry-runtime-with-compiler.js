@@ -9,16 +9,22 @@ import { query } from './util/index'
 import { compileToFunctions } from './compiler/index'
 import { shouldDecodeNewlines, shouldDecodeNewlinesForHref } from './util/compat'
 
+// 获取元素模版
 const idToTemplate = cached(id => {
   const el = query(id)
   return el && el.innerHTML
 })
 
+// 保存mount接口
 const mount = Vue.prototype.$mount
+
+// 编译运行时$mount修正
 Vue.prototype.$mount = function (
   el?: string | Element,
   hydrating?: boolean
 ): Component {
+
+  // 获取元素
   el = el && query(el)
 
   /* istanbul ignore if */
@@ -29,10 +35,16 @@ Vue.prototype.$mount = function (
     return this
   }
 
+  // 选项
   const options = this.$options
   // resolve template/el and convert to render function
+  // 检查是否包含渲染选项
   if (!options.render) {
+
+    // 获取模版选项
     let template = options.template
+
+    // 检查是否已包含模版
     if (template) {
       if (typeof template === 'string') {
         if (template.charAt(0) === '#') {
@@ -54,6 +66,7 @@ Vue.prototype.$mount = function (
         return this
       }
     } else if (el) {
+      // 生成模版
       template = getOuterHTML(el)
     }
     if (template) {

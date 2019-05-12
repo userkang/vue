@@ -690,7 +690,9 @@ export function createPatchFunction (backend) {
   }
 
   return function patch (oldVnode, vnode, hydrating, removeOnly) {
+    // 如果 vnode 不存在，但是 oldVnode 存在，说明需要销毁旧节点
     if (isUndef(vnode)) {
+      // 调用invokeDestroyHook 来销毁 oldVnode
       if (isDef(oldVnode)) invokeDestroyHook(oldVnode)
       return
     }
@@ -698,24 +700,34 @@ export function createPatchFunction (backend) {
     let isInitialPatch = false
     const insertedVnodeQueue = []
 
+    // 如果 oldVnode 不存在，说明要创建一个新节点
     if (isUndef(oldVnode)) {
       // empty mount (likely as component), create new root element
       isInitialPatch = true
+      // 调用 createElm 来创建新节点
       createElm(vnode, insertedVnodeQueue)
     } else {
+      // 当 vnode 和 oldVnode 都存在时
       const isRealElement = isDef(oldVnode.nodeType)
+      // 如果 oldVnode 不是真实节点，并且 vnode 和 oldVnode 是同一节点
       if (!isRealElement && sameVnode(oldVnode, vnode)) {
         // patch existing root node
+        // 说明是需要比较新旧节点，调用 patchVnode 进行比较
         patchVnode(oldVnode, vnode, insertedVnodeQueue, removeOnly)
       } else {
+        // 如果 oldVnode 是真实节点
         if (isRealElement) {
           // mounting to a real element
           // check if this is server-rendered content and if we can perform
           // a successful hydration.
+          // 如果 oldVnode 是元素节点，含有 data-server-rendered 属性
+          // 移除该属性，并设置 hydrating 为 true
           if (oldVnode.nodeType === 1 && oldVnode.hasAttribute(SSR_ATTR)) {
             oldVnode.removeAttribute(SSR_ATTR)
             hydrating = true
           }
+          // 如果 hydrating 是 true，调用 hudrate 方法
+          // 将 Virtural DOM 与真实 DOM 进行映射，然后将 oldVnode 设置为对应的 Virtual DOM
           if (isTrue(hydrating)) {
             if (hydrate(oldVnode, vnode, insertedVnodeQueue)) {
               invokeInsertHook(vnode, insertedVnodeQueue, true)
@@ -735,11 +747,15 @@ export function createPatchFunction (backend) {
           oldVnode = emptyNodeAt(oldVnode)
         }
 
+        // 如果oldVnode是真实节点时或vnode和oldVnode不是同一节点时
+        
         // replacing existing element
         const oldElm = oldVnode.elm
+        // 找到oldVnode.elm的父节点
         const parentElm = nodeOps.parentNode(oldElm)
 
         // create new node
+        // 根据vnode创建一个真实的DOM节点
         createElm(
           vnode,
           insertedVnodeQueue,
@@ -751,6 +767,7 @@ export function createPatchFunction (backend) {
         )
 
         // update parent placeholder node element, recursively
+        // 并插入到该父节点中的 oldVnode.elm 位置。如果组件根节点被替换，遍历更新父节点element。
         if (isDef(vnode.parent)) {
           let ancestor = vnode.parent
           const patchable = isPatchable(vnode)
@@ -781,6 +798,7 @@ export function createPatchFunction (backend) {
         }
 
         // destroy old node
+        // 移除老节点
         if (isDef(parentElm)) {
           removeVnodes(parentElm, [oldVnode], 0, 0)
         } else if (isDef(oldVnode.tag)) {
